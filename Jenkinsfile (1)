@@ -1,0 +1,57 @@
+pipeline {
+    agent any
+    stages {
+        stage('Pull Code From GitHub') {
+            steps {
+                git 'https://github.com/Santhoshsk1802/k8project.git'
+            }
+        }
+        stage('Build the Docker image') {
+            steps {
+                sh 'sudo docker build -t kopsimage /var/lib/jenkins/workspace/k8'
+                sh 'sudo docker tag kopsimage santhoshkumarsk/kopsimage:latest'
+                sh 'sudo docker tag kopsimage santhoshkumarsk/kopsimage:${BUILD_NUMBER}'
+            }
+        }
+        stage('Push the Docker image') {
+            steps {
+                sh 'sudo docker image push santhoshkumarsk/kopsimage:latest'
+                sh 'sudo docker image push santhoshkumarsk/kopsimage:${BUILD_NUMBER}'
+            }
+        }
+        stage('Deploy on Kubernetes') {
+            steps {
+                sh 'kubectl apply -f /var/lib/jenkins/workspace/k8/pod.yaml'
+                sh 'kubectl rollout restart deployment loadbalancer-pod'
+            }
+        }
+    }
+}
+
+
+Latest: replica 5
+Build 1: replica 5
+
+
+Latest: replica 7
+Build 2: replica 7
+
+Latest: replica 7
+
+B1-- replica 5
+b2-- replica 7
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
